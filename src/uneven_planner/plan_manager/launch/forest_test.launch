@@ -1,14 +1,15 @@
 <launch>
+  
   <arg name="odom_topic" value="/racebot/true_state/odom" />
   <arg name="cmd_topic" value="/racebot/cmd_vel" />
   <arg name="traj_topic" value="/ugv/trajectory" />
-  <arg name="map_name" default="mars" />
-  <arg name="x_pos" value="-4.0"/>
-  <arg name="y_pos" value="-4.0"/>
-  <arg name="z_pos" value="3.0"/>
+  <arg name="map_name" default="forest" />
+  <arg name="x_pos" value="-4.5"/>
+  <arg name="y_pos" value="-4.5"/>
+  <arg name="z_pos" value="2.0"/>
   <arg name="Y_pos" value="0.0"/>
 
-  <rosparam command="load" file="$(find plan_manager)/params/run_mars.yaml" />
+  <rosparam command="load" file="$(find plan_manager)/params/run_forest.yaml" />
 
   <node pkg="plan_manager" name="manager_node" type="manager_node" output="screen">
     <param name="uneven_map/map_pcd" type="string" value="$(find uneven_map)/maps/$(arg map_name).pcd" />
@@ -18,6 +19,7 @@
     <remap from="~traj" to="$(arg traj_topic)"/>
   </node>
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find uneven_map)/rviz/default.rviz" required="true" />
+  <!-- rviz -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find plan_manager)/rviz/default.rviz" required="true" />
   
 </launch>

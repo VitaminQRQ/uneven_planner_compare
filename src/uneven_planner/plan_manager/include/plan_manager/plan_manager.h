@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <nav_msgs/Path.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 #include "uneven_map/uneven_map.h"
 #include "front_end/kino_astar.h"
@@ -35,11 +36,13 @@ namespace uneven_planner
 
             ros::Publisher traj_pub;
             ros::Subscriber odom_sub;
+            ros::Subscriber start_sub;
             ros::Subscriber target_sub;
             
         public:
             void init(ros::NodeHandle& nh);
             void rcvOdomCallBack(const nav_msgs::OdometryConstPtr& msg);
+            void rcvStartCallBack(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg);
             void rcvWpsCallBack(const geometry_msgs::PoseStamped msg);
     };
 }

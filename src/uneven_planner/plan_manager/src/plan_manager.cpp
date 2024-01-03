@@ -23,6 +23,7 @@ namespace uneven_planner
 
         traj_pub = nh.advertise<mpc_controller::SE2Traj>("traj", 1);
         odom_sub = nh.subscribe<nav_msgs::Odometry>("odom", 1, &PlanManager::rcvOdomCallBack, this);
+        start_sub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 1, &PlanManager::rcvStartCallBack, this);
         target_sub = nh.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, &PlanManager::rcvWpsCallBack, this);
         
         return;
@@ -38,6 +39,21 @@ namespace uneven_planner
                              msg->pose.pose.orientation.z  );
         Eigen::Matrix3d R(q);
         odom_pos(2) = UnevenMap::calYawFromR(R);
+    }
+
+    void PlanManager::rcvStartCallBack(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg) {
+        odom_pos(0) = msg->pose.pose.position.x;
+        odom_pos(1) = msg->pose.pose.position.y;
+
+        Eigen::Quaterniond q(msg->pose.pose.orientation.w, 
+                             msg->pose.pose.orientation.x,
+                             msg->pose.pose.orientation.y,
+                             msg->pose.pose.orientation.z);
+        
+        Eigen::Matrix3d R(q);
+        odom_pos(2) = UnevenMap::calYawFromR(R);
+
+        std::cout << "odom_pos: [" << odom_pos(0) << ", " << odom_pos(1) << ", " << odom_pos(2) << "]" << std::endl;
     }
 
     void PlanManager::rcvWpsCallBack(const geometry_msgs::PoseStamped msg)

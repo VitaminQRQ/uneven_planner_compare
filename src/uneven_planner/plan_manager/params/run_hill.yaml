@@ -31,7 +31,7 @@ manager_node:
 
   alm_traj_opt:
     rho_T: 100000.0
-    rho_ter: 10.0
+    rho_ter: 10000.0
     max_vel: 0.5
     max_acc_lon: 5.0
     max_acc_lat: 10.0

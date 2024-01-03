@@ -109,6 +109,10 @@ namespace uneven_planner
         voxel_num(1) = ceil(map_size(1) / xy_resolution);
         voxel_num(2) = ceil(map_size(2) / yaw_resolution);
 
+        ROS_WARN("map_size[0]: %f", map_size[0]);
+        ROS_WARN("map_size[1]: %f", map_size[1]);
+        ROS_WARN("xy resolution: %f", xy_resolution);
+
         // idx
         min_idx = Eigen::Vector3i::Zero();
         max_idx = voxel_num - Eigen::Vector3i::Ones();
@@ -130,9 +134,10 @@ namespace uneven_planner
         pcl::PCDReader reader;
         reader.read<pcl::PointXYZ>(pcd_file, cloudMapOrigin);
 
+        // [-6, 3]
         pcl::CropBox<pcl::PointXYZ> clipper;
-        clipper.setMin(Eigen::Vector4f(0.0,   0.0, -0.01, 1.0));
-        clipper.setMax(Eigen::Vector4f(map_size[0], map_size[1], 5.0, 1.0));
+        clipper.setMin(Eigen::Vector4f(-map_size[0] / 2, -map_size[1] / 2, -6, 1.0));
+        clipper.setMax(Eigen::Vector4f(map_size[0] / 2, map_size[1] / 2, 3.0, 1.0));
         clipper.setInputCloud(cloudMapOrigin.makeShared());
         clipper.filter(cloudMapClipper);
         cloudMapOrigin.clear();
@@ -321,6 +326,10 @@ namespace uneven_planner
         const double box_r = max(max(ellipsoid_x, ellipsoid_y), ellipsoid_z);
         const Eigen::Vector3d ellipsoid_vecinv(1.0 / ellipsoid_x, 1.0 / ellipsoid_y, 1.0 / ellipsoid_z);
         int cnt=0;
+
+        ROS_WARN("voxel_num_x: %d", voxel_num[0]);
+        ROS_WARN("voxel_num_y: %d", voxel_num[1]);
+        ROS_WARN("voxel_num_z: %d", voxel_num[2]);
 
         for (int x=0; x<voxel_num[0]; x++)
             for (int y=0; y<voxel_num[1]; y++)
