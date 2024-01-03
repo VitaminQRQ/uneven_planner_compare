@@ -30,7 +30,7 @@ manager_node:
     in_test: false
 
   alm_traj_opt:
-    rho_T: 10.0
+    rho_T: 1.0
     rho_ter: 10000.0
     max_vel: 0.5
     max_acc_lon: 5.0
