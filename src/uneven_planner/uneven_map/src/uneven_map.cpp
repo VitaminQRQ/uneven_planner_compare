@@ -136,14 +136,20 @@ namespace uneven_planner
 
         // [-6, 3]
         pcl::CropBox<pcl::PointXYZ> clipper;
-        clipper.setMin(Eigen::Vector4f(-map_size[0] / 2, -map_size[1] / 2, -6, 1.0));
-        clipper.setMax(Eigen::Vector4f(map_size[0] / 2, map_size[1] / 2, 3.0, 1.0));
+        clipper.setMin(Eigen::Vector4f(-map_size[0] / 2, -map_size[1] / 2, -6 , 1.0));
+        clipper.setMax(Eigen::Vector4f( map_size[0] / 2,  map_size[1] / 2, 3.0, 1.0));
         clipper.setInputCloud(cloudMapOrigin.makeShared());
         clipper.filter(cloudMapClipper);
         cloudMapOrigin.clear();
 
         pcl::VoxelGrid<pcl::PointXYZ> dwzFilter;
-        dwzFilter.setLeafSize(0.01, 0.01, 0.01);
+
+        if (map_size[0] > 20) {
+            dwzFilter.setLeafSize(0.5, 0.5, 0.5);            
+        } else {
+            dwzFilter.setLeafSize(0.01, 0.01, 0.01);
+        }
+
         dwzFilter.setInputCloud(cloudMapClipper.makeShared());
         dwzFilter.filter(*world_cloud);
         cloudMapClipper.clear();
