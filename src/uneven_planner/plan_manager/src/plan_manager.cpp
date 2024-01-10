@@ -1,5 +1,7 @@
 #include "plan_manager/plan_manager.h"
-
+#include <iostream>
+#include <chrono>
+#include <thread>
 
 namespace uneven_planner
 {
@@ -30,7 +32,7 @@ namespace uneven_planner
                 point_data.push_back(std::stod(cell));
             }
         
-            Eigen::Vector2d point(-point_data[0], -point_data[1]);
+            Eigen::Vector2d point(point_data[0], point_data[1]);
             path_xy.push_back(point);
         }
         
@@ -72,6 +74,7 @@ namespace uneven_planner
             return false;
         }
 
+        file << "# x, y\n";
         for (const Eigen::Vector2d& point : result_path) {
             file << point.x() << "," << point.y() << "\n";
         }
@@ -131,6 +134,7 @@ namespace uneven_planner
         Eigen::Matrix3d R(q);
         odom_pos(2) = UnevenMap::calYawFromR(R);
 
+        std::cout << "Get Start State!" << std::endl;
         std::cout << "odom_pos: [" << odom_pos(0) << ", " << odom_pos(1) << ", " << odom_pos(2) << "]" << std::endl;
     }
 
@@ -146,20 +150,24 @@ namespace uneven_planner
                                   atan2(2.0*msg.pose.orientation.z*msg.pose.orientation.w, \
                                         2.0*pow(msg.pose.orientation.w, 2)-1.0)             );
         
+        // -------------------------------------------------------------------------------------
+        // 跑其他场景仿真的时候，下面这行记得解注释
+        // -------------------------------------------------------------------------------------
         // std::vector<Eigen::Vector3d> init_path = kino_astar->plan(odom_pos, end_state);
         
         // -------------------------------------------------------------------------------------
         // 替换利用 knio_astar 求解参考路径 init_path = kino_astar->plan(odom_pos, end_state) 
         // 转而从 CSV 文件中读取参考线和起点 & 终点位姿
         // -------------------------------------------------------------------------------------
+        std::cout << "Get goal state, wait for reference.csv" << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         std::vector<Eigen::Vector3d> init_path = readPathFromCSV(
-            "/home/qrq_18/uneven_planner/src/src/uneven_planner/plan_manager/data/reference.csv");
+            "/home/qrq_18/catkin_ws/src/offroad_planner/data/reference.csv");
         
         std::cout << "GO GO GO!" << std::endl;
         for (const auto& pt : init_path) {
             std::cout << "[" << pt.x() << ", " << pt.y() << ", " << pt.z() << "]" << std::endl;
         }
-
         // -------------------------------------------------------------------------------------
         
         if (init_path.empty())
@@ -194,17 +202,22 @@ namespace uneven_planner
     
         init_xy << init_path[0].x(), 0.0, 0.0, \
                    init_path[0].y(), 0.0, 0.0;
-        // end_xy << init_path.back().x(), 0.0, 0.0, \
-        //            init_path.back().y(), 0.0, 0.0;
-
-        end_xy << -19.495  , 0.0, 0.0, \
-                  0.444386, 0.0, 0.0;        
-
+        end_xy << init_path.back().x(), 0.0, 0.0, \
+                   init_path.back().y(), 0.0, 0.0;    
         init_yaw << init_path[0].z(), 0.0, 0.0;
         end_yaw << init_path.back().z(), 0.0, 0.0;
+        
+        // init_xy << odom_pos.x(), 0.0, 0.0, 
+        //            odom_pos.y(), 0.0, 0.0;
+
+        // end_xy << end_state.x(), 0.0, 0.0, 
+        //           end_state.y(), 0.0, 0.0;    
+
+        // init_yaw << odom_pos.z(), 0.0, 0.0;
+        // end_yaw  << end_state.z(), 0.0, 0.0;
 
         init_xy.col(1) << init_sig_vel * cos(init_yaw(0)), init_sig_vel * sin(init_yaw(0));
-        end_xy.col(1) << init_sig_vel * cos(end_yaw(0)), init_sig_vel * sin(end_yaw(0));
+        end_xy.col(1)  << init_sig_vel * cos(end_yaw(0)) , init_sig_vel * sin(end_yaw(0));
         
         double temp_len_yaw = 0.0;
         double temp_len_pos = 0.0;
@@ -289,7 +302,7 @@ namespace uneven_planner
             result_path.push_back(path_point);
         }
 
-        bool save_flag = savePathToCSV(result_path, "/home/qrq_18/uneven_planner/src/src/uneven_planner/plan_manager/data/uneven_result.csv");
+        bool save_flag = savePathToCSV(result_path, "/home/qrq_18/catkin_ws/src/offroad_planner/data/uneven_result.csv");
         if (save_flag) {
             std::cout << "\nOhhhhhh Yeah!\n" << std::endl;
         }

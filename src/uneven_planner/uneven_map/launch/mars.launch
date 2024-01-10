@@ -18,6 +18,6 @@
     <remap from="~traj" to="$(arg traj_topic)"/>
   </node>
 
-  <node name="rviz_mars" pkg="rviz" type="rviz" args="-d $(find uneven_map)/rviz/default.rviz" required="true" />
+  <!-- <node name="rviz_mars" pkg="rviz" type="rviz" args="-d $(find uneven_map)/rviz/default.rviz" required="true" /> -->
   
 </launch>

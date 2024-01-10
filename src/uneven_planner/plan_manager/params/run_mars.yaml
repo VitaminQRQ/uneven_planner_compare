@@ -56,7 +56,7 @@ manager_node:
 
   manager:
     # 分段路径的长度
-    piece_len: 5.0  
+    piece_len: 10.0  
     # 平均车速    
     mean_vel: 5.0
     # 调节因子，越大越平滑
