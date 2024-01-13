@@ -134,13 +134,32 @@ namespace uneven_planner
         pcl::PCDReader reader;
         reader.read<pcl::PointXYZ>(pcd_file, cloudMapOrigin);
 
-        // [-6, 3]
+        Eigen::Vector4f cloud_centroid;
+        pcl::compute3DCentroid(cloudMapOrigin, cloud_centroid);
+
+        // 创建平移变换矩阵，使得质心移动到原点
+        Eigen::Matrix4f translation = Eigen::Matrix4f::Identity();
+        translation(0, 3) = -cloud_centroid[0];
+        translation(1, 3) = -cloud_centroid[1];
+        translation(2, 3) = -cloud_centroid[2];        
+
+        pcl::PointCloud<pcl::PointXYZ> cloud_transformed;
+        pcl::transformPointCloud(cloudMapOrigin, cloud_transformed, translation);
+
+        std::cout << "raw cloud size: " << cloudMapOrigin.size() << std::endl;
+        std::cout << "transformed cloud size: " << cloud_transformed.size() << std::endl;
+
+        pcl::PointXYZ min_point, max_point;
+        pcl::getMinMax3D(cloud_transformed, min_point, max_point);
+
         pcl::CropBox<pcl::PointXYZ> clipper;
-        clipper.setMin(Eigen::Vector4f(-map_size[0] / 2, -map_size[1] / 2, -6 , 1.0));
-        clipper.setMax(Eigen::Vector4f( map_size[0] / 2,  map_size[1] / 2, 3.0, 1.0));
-        clipper.setInputCloud(cloudMapOrigin.makeShared());
+        clipper.setMin(Eigen::Vector4f(min_point.x, min_point.y, min_point.z, 1.0));
+        clipper.setMax(Eigen::Vector4f(max_point.x, max_point.y, max_point.z, 1.0));
+        // clipper.setInputCloud(cloudMapOrigin.makeShared());
+        clipper.setInputCloud(cloud_transformed.makeShared());
         clipper.filter(cloudMapClipper);
         cloudMapOrigin.clear();
+        cloud_transformed.clear();
 
         pcl::VoxelGrid<pcl::PointXYZ> dwzFilter;
 
@@ -153,6 +172,8 @@ namespace uneven_planner
         dwzFilter.setInputCloud(cloudMapClipper.makeShared());
         dwzFilter.filter(*world_cloud);
         cloudMapClipper.clear();
+
+        std::cout << "cloud size: " << world_cloud->points.size() << std::endl;
 
         for (size_t i=0; i<world_cloud->points.size(); i++)
         {
@@ -342,6 +363,7 @@ namespace uneven_planner
                 for (int yaw=0; yaw<voxel_num[2]; yaw++)
                     for (int iter=0; iter<iter_num; iter++)
                     {
+                        
                         Eigen::Vector3d map_pos;
                         RXS2 map_rs2 = map_buffer[toAddress(x, y, yaw)];
                         double map_c = c_buffer[toAddress(x, y, yaw)];
@@ -360,6 +382,7 @@ namespace uneven_planner
                         
                         vector<int> Idxs;
                         vector<float> SquaredDists;
+                        
                         if (iter == 0)
                         {
                             pcl::PointXY pxy;
@@ -377,6 +400,7 @@ namespace uneven_planner
                         pt.x = world_pos(0);
                         pt.y = world_pos(1);
                         pt.z = world_pos(2);
+                        
                         if (kd_tree.radiusSearch(pt, box_r, Idxs, SquaredDists) > 0)
                         {
                             // is in ellipsoid
@@ -393,6 +417,7 @@ namespace uneven_planner
                                 }
                             }
                         }
+
                         if (points.empty())
                         {
                             // std::cout<<"Points empty, but don't worry."<<std::endl;
