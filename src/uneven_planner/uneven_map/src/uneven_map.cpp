@@ -75,6 +75,17 @@ namespace uneven_planner
         nh.getParam("uneven_map/iter_num", iter_num);
         nh.getParam("uneven_map/map_size_x", map_size[0]);
         nh.getParam("uneven_map/map_size_y", map_size[1]);
+
+        map_x_bound[0] = -map_size[0] / 2;
+        map_x_bound[1] =  map_size[0] / 2;
+        map_y_bound[0] = -map_size[1] / 2;
+        map_y_bound[1] =  map_size[1] / 2;
+        
+        nh.getParam("uneven_map/map_min_x", map_x_bound[0]); // Newly add
+        nh.getParam("uneven_map/map_max_x", map_x_bound[1]); // Newly add
+        nh.getParam("uneven_map/map_min_y", map_y_bound[0]); // Newly add
+        nh.getParam("uneven_map/map_max_y", map_y_bound[1]); // Newly add
+
         nh.getParam("uneven_map/ellipsoid_x", ellipsoid_x);
         nh.getParam("uneven_map/ellipsoid_y", ellipsoid_y);
         nh.getParam("uneven_map/ellipsoid_z", ellipsoid_z);
@@ -137,17 +148,32 @@ namespace uneven_planner
         Eigen::Vector4f cloud_centroid;
         pcl::compute3DCentroid(cloudMapOrigin, cloud_centroid);
 
+        Eigen::Vector2d DEM_centroid;
+        DEM_centroid.x() = (map_x_bound[1] + map_x_bound[0]) / 2;
+        DEM_centroid.y() = (map_y_bound[1] + map_y_bound[0]) / 2;
+
         // 创建平移变换矩阵，使得质心移动到原点
         Eigen::Matrix4f translation = Eigen::Matrix4f::Identity();
-        translation(0, 3) = -cloud_centroid[0];
-        translation(1, 3) = -cloud_centroid[1];
-        translation(2, 3) = -cloud_centroid[2];        
+        // translation(0, 3) = -cloud_centroid[0];
+        // translation(1, 3) = -cloud_centroid[1];
+        // translation(2, 3) = 0;        
+
+        translation(0, 3) = -DEM_centroid.x();
+        translation(1, 3) = -DEM_centroid.y();
+        translation(2, 3) = 0;
+
+        std::cout << "cloud centroid x: " << cloud_centroid[0] << std::endl;
+        std::cout << "cloud centroid y: " << cloud_centroid[1] << std::endl;
+        std::cout << "DEM centroid x: " << DEM_centroid.x() << std::endl;
+        std::cout << "DEM centroid y: " << DEM_centroid.y() << std::endl; 
 
         pcl::PointCloud<pcl::PointXYZ> cloud_transformed;
         pcl::transformPointCloud(cloudMapOrigin, cloud_transformed, translation);
 
         std::cout << "raw cloud size: " << cloudMapOrigin.size() << std::endl;
         std::cout << "transformed cloud size: " << cloud_transformed.size() << std::endl;
+
+        auto start_time = std::chrono::high_resolution_clock::now();
 
         pcl::PointXYZ min_point, max_point;
         pcl::getMinMax3D(cloud_transformed, min_point, max_point);
@@ -209,6 +235,11 @@ namespace uneven_planner
                         occ_r2_buffer[x*voxel_num(1)+y] = 1;
                     }
                 }
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+        ROS_INFO("Map processing time: %f s", duration.count() / 1000.0);
+        ROS_INFO("Map processing time: %f ms", duration.count());
 
         //  to pcl and marker msg
         zb_msg.type = visualization_msgs::Marker::LINE_LIST;

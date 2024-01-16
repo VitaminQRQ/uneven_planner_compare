@@ -6,6 +6,8 @@
 #include <string>
 #include <random>
 
+#include <chrono>
+
 #include <ros/ros.h>
 #include <ros/console.h>
 #include <nav_msgs/Odometry.h>
@@ -82,6 +84,10 @@ namespace uneven_planner
             double          mass;
             Eigen::Vector3d map_origin;
             Eigen::Vector3d map_size;
+            
+            Eigen::Vector2d map_x_bound;
+            Eigen::Vector2d map_y_bound;
+            
             Eigen::Vector3d min_boundary;
             Eigen::Vector3d max_boundary;
             Eigen::Vector3i min_idx;

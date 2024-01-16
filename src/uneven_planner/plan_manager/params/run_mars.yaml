@@ -3,6 +3,10 @@ manager_node:
     iter_num: 2
     map_size_x : 55
     map_size_y : 125
+    map_max_x  : 25.7779 
+    map_min_x  : -29.2221
+    map_max_y  : 63.7783
+    map_min_y  : -61.2217
     ellipsoid_x: 4
     ellipsoid_y: 2
     ellipsoid_z: 2
